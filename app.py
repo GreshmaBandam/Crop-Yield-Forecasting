@@ -2,63 +2,57 @@ import streamlit as st
 import pickle
 import pandas as pd
 
-# -------------------------------
-# Load trained model
-# -------------------------------
+# Load model
 model = pickle.load(open("model.pkl", "rb"))
 
-# -------------------------------
-# Page config
-# -------------------------------
-st.set_page_config(
-    page_title="Crop Yield Prediction",
-    page_icon="🌾",
-    layout="centered"
-)
-
+st.set_page_config(page_title="Crop Yield Prediction", page_icon="🌾")
 st.title("🌾 Crop Yield Prediction System")
-st.write("Enter the details below to predict crop yield (hg/ha)")
+
+st.write("Predict crop yield based on historical, climatic, and agricultural data.")
 
 # -------------------------------
-# User Inputs
+# Inputs
 # -------------------------------
-area = st.number_input(
-    "Area (Encoded Value)",
+row_id = st.number_input(
+    "Record Index (Unnamed: 0)",
     min_value=0,
     step=1,
-    help="Encoded value of country/region used during training"
+    help="Dummy index value required by the trained model"
+)
+
+area = st.number_input(
+    "Area (Encoded)",
+    min_value=0,
+    step=1
 )
 
 item = st.number_input(
-    "Crop Type (Encoded Value)",
+    "Crop Type (Encoded)",
     min_value=0,
-    step=1,
-    help="Encoded value of crop type used during training"
+    step=1
 )
 
 year = st.number_input(
     "Year",
     min_value=1960,
-    max_value=2030,
+    max_value=2035,
     step=1
 )
 
 rainfall = st.number_input(
-    "Average Rainfall (mm per year)",
-    min_value=0.0,
-    help="Typical range: 500 – 2000 mm"
+    "Average Rainfall (mm/year)",
+    min_value=0.0
 )
 
 pesticides = st.number_input(
-    "Pesticide Usage (tonnes)",
+    "Pesticides Used (tonnes)",
     min_value=0.0
 )
 
 temperature = st.number_input(
     "Average Temperature (°C)",
-    min_value=-5.0,
-    max_value=60.0,
-    help="Typical range: 10 – 35 °C"
+    min_value=-10.0,
+    max_value=60.0
 )
 
 # -------------------------------
@@ -66,10 +60,10 @@ temperature = st.number_input(
 # -------------------------------
 if st.button("Predict Yield"):
     try:
-        # Create DataFrame with EXACT feature names used in training
         input_df = pd.DataFrame(
-            [[area, item, year, rainfall, pesticides, temperature]],
+            [[row_id, area, item, year, rainfall, pesticides, temperature]],
             columns=[
+                "Unnamed: 0",
                 "Area",
                 "Item",
                 "Year",
@@ -83,16 +77,6 @@ if st.button("Predict Yield"):
 
         st.success(f"🌱 Predicted Crop Yield: **{prediction[0]:.2f} hg/ha**")
 
-        # -------------------------------
-        # Simple Recommendations
-        # -------------------------------
-        if rainfall < 500:
-            st.warning("⚠️ Low rainfall detected. Consider additional irrigation.")
-        if temperature > 35:
-            st.warning("⚠️ High temperature may affect yield. Heat-resistant crops recommended.")
-        if pesticides > 150:
-            st.warning("⚠️ High pesticide usage detected. Optimize pesticide application.")
-
     except Exception as e:
-        st.error("An error occurred during prediction.")
+        st.error("Prediction failed due to feature mismatch.")
         st.write(e)
